@@ -41,6 +41,11 @@ export const MatchModal: React.FC<MatchModalProps> = ({
 
   if (!isOpen || !matchedProfile) return null;
 
+  const fallbackUser = 'https://api.dicebear.com/7.x/micah/svg?seed=Alex&backgroundColor=0f172a';
+  const fallbackMatch = `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(
+    matchedProfile.name
+  )}&backgroundColor=0f172a`;
+
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-xl">
@@ -86,6 +91,11 @@ export const MatchModal: React.FC<MatchModalProps> = ({
               <img
                 src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80"
                 alt="You"
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  target.onerror = null;
+                  target.src = fallbackUser;
+                }}
                 className="w-full h-full object-cover"
               />
             </motion.div>
@@ -111,6 +121,11 @@ export const MatchModal: React.FC<MatchModalProps> = ({
               <img
                 src={matchedProfile.photo}
                 alt={matchedProfile.name}
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  target.onerror = null;
+                  target.src = fallbackMatch;
+                }}
                 className="w-full h-full object-cover"
               />
             </motion.div>

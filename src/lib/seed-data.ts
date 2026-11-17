@@ -465,57 +465,54 @@ export const MOCK_PROFILES = [
 ];
 
 export async function seedDatabase() {
-  console.log('🌱 Starting database seeding...');
+  await prisma.$transaction(
+    async (tx) => {
+      // Clean existing data
+      await tx.match.deleteMany();
+      await tx.swipe.deleteMany();
+      await tx.user.deleteMany();
 
-  // Clean existing data
-  await prisma.match.deleteMany();
-  await prisma.swipe.deleteMany();
-  await prisma.user.deleteMany();
-
-  // Create current user
-  const currentUser = await prisma.user.create({
-    data: {
-      id: CURRENT_USER_ID,
-      name: 'Alex Rivera',
-      age: 24,
-      photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
-      photos: JSON.stringify([
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
-      ]),
-      bio: 'Product Designer exploring architecture, street photography, and espresso bars around the world.',
-      city: 'San Francisco',
-      college: 'Stanford University',
-      interests: JSON.stringify(['Design', 'Photography', 'Coffee', 'Travel', 'Art']),
-      isCurrentUser: true,
-    },
-  });
-
-  console.log(`✅ Current user seeded: ${currentUser.name} (${currentUser.id})`);
-
-  let incomingLikesCount = 0;
-
-  for (const item of MOCK_PROFILES) {
-    const { alreadyLikedMe, ...profileData } = item;
-    const profile = await prisma.user.create({
-      data: {
-        ...profileData,
-        isCurrentUser: false,
-      },
-    });
-
-    if (alreadyLikedMe) {
-      await prisma.swipe.create({
+      // Create current user
+      await tx.user.create({
         data: {
-          swiperId: profile.id,
-          swipedId: CURRENT_USER_ID,
-          action: 'like',
+          id: CURRENT_USER_ID,
+          name: 'Alex Rivera',
+          age: 24,
+          photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+          photos: JSON.stringify([
+            'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+          ]),
+          bio: 'Product Designer exploring architecture, street photography, and espresso bars around the world.',
+          city: 'San Francisco',
+          college: 'Stanford University',
+          interests: JSON.stringify(['Design', 'Photography', 'Coffee', 'Travel', 'Art']),
+          isCurrentUser: true,
         },
       });
-      incomingLikesCount++;
-    }
-  }
 
-  console.log(`✅ Seeded ${MOCK_PROFILES.length} mock candidate profiles.`);
-  console.log(`💖 Seeded ${incomingLikesCount} pre-existing incoming likes directed at current user.`);
-  console.log('✨ Seeding successfully completed!');
+      for (const item of MOCK_PROFILES) {
+        const { alreadyLikedMe, ...profileData } = item;
+        await tx.user.create({
+          data: {
+            ...profileData,
+            isCurrentUser: false,
+          },
+        });
+
+        if (alreadyLikedMe) {
+          await tx.swipe.create({
+            data: {
+              swiperId: profileData.id,
+              swipedId: CURRENT_USER_ID,
+              action: 'like',
+            },
+          });
+        }
+      }
+    },
+    {
+      maxWait: 15000,
+      timeout: 25000,
+    }
+  );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
 import { Profile, SwipeAction, SwipeResponse } from '@/lib/types';
 import { ProfileCard } from './ProfileCard';
@@ -20,6 +20,7 @@ export const DiscoverFeed: React.FC<DiscoverFeedProps> = ({
 }) => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [swipeDirection, setSwipeDirection] = useState<SwipeAction | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isSwiping, setIsSwiping] = useState<boolean>(false);
@@ -40,6 +41,7 @@ export const DiscoverFeed: React.FC<DiscoverFeedProps> = ({
       if (data.success && Array.isArray(data.profiles)) {
         setProfiles(data.profiles);
         setCurrentIndex(0);
+        setSwipeDirection(null);
       } else {
         throw new Error(data.error || 'Invalid feed response format');
       }
@@ -63,6 +65,7 @@ export const DiscoverFeed: React.FC<DiscoverFeedProps> = ({
     if (!currentProfile) return;
 
     setIsSwiping(true);
+    setSwipeDirection(action);
 
     try {
       // Advance to next card in local state
@@ -87,7 +90,6 @@ export const DiscoverFeed: React.FC<DiscoverFeedProps> = ({
       }
     } catch (err) {
       console.error('Failed to submit swipe:', err);
-      // In case of error, the user has moved to the next card to preserve fluid UI
     } finally {
       setIsSwiping(false);
     }
@@ -203,13 +205,14 @@ export const DiscoverFeed: React.FC<DiscoverFeedProps> = ({
             )}
 
             {/* Front active swipeable card */}
-            <AnimatePresence>
+            <AnimatePresence custom={swipeDirection}>
               {activeProfile && (
                 <ProfileCard
                   key={activeProfile.id}
                   profile={activeProfile}
                   onSwipe={handleSwipe}
                   isFront={true}
+                  exitDirection={swipeDirection}
                 />
               )}
             </AnimatePresence>

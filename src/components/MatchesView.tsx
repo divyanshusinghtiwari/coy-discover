@@ -30,6 +30,9 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
     setChatMessage('');
   };
 
+  const getFallbackAvatar = (name: string) =>
+    `https://api.dicebear.com/7.x/micah/svg?seed=${encodeURIComponent(name)}&backgroundColor=0f172a`;
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] p-6">
@@ -94,6 +97,11 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
               <img
                 src={profile.photo}
                 alt={profile.name}
+                onError={(e) => {
+                  const target = e.currentTarget;
+                  target.onerror = null;
+                  target.src = getFallbackAvatar(profile.name);
+                }}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
 
@@ -143,6 +151,11 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
                 <img
                   src={selectedMatch.matchedUser.photo}
                   alt={selectedMatch.matchedUser.name}
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    target.onerror = null;
+                    target.src = getFallbackAvatar(selectedMatch.matchedUser.name);
+                  }}
                   className="w-12 h-12 rounded-full object-cover border-2 border-rose-500"
                 />
                 <div>

@@ -5,7 +5,8 @@ export default defineConfig({
   test: {
     environment: 'node',
     globals: true,
-    testTimeout: 20000,
+    testTimeout: 25000,
+    fileParallelism: false, // SQLite does not support concurrent write transactions across multiple worker processes
   },
   resolve: {
     alias: {

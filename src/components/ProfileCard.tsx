@@ -9,12 +9,28 @@ interface ProfileCardProps {
   profile: Profile;
   onSwipe: (action: SwipeAction) => void;
   isFront: boolean;
+  exitDirection?: SwipeAction | null;
 }
+
+const cardVariants = {
+  initial: { scale: 0.95, y: 10, opacity: 0.8 },
+  animate: { scale: 1, y: 0, opacity: 1, transition: { duration: 0.25 } },
+  exit: (direction?: SwipeAction | null) => {
+    const dir = direction === 'pass' ? -1 : 1;
+    return {
+      x: dir * 550,
+      rotate: dir * 22,
+      opacity: 0,
+      transition: { duration: 0.32, ease: 'easeIn' },
+    };
+  },
+};
 
 export const ProfileCard: React.FC<ProfileCardProps> = ({
   profile,
   onSwipe,
   isFront,
+  exitDirection = null,
 }) => {
   const [photoIndex, setPhotoIndex] = useState(0);
   const [isBioExpanded, setIsBioExpanded] = useState(false);
@@ -32,8 +48,8 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   const nopeOpacity = useTransform(x, [-30, -120], [0, 1]);
 
   const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    const swipeThreshold = 100;
-    const velocityThreshold = 400;
+    const swipeThreshold = 90;
+    const velocityThreshold = 350;
 
     if (info.offset.x > swipeThreshold || info.velocity.x > velocityThreshold) {
       onSwipe('like');
@@ -71,6 +87,11 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
         <img
           src={profile.photo}
           alt={profile.name}
+          onError={(e) => {
+            const target = e.currentTarget;
+            target.onerror = null;
+            target.src = fallbackAvatar;
+          }}
           className="w-full h-full object-cover filter brightness-75"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent" />
@@ -91,6 +112,11 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.8}
       onDragEnd={handleDragEnd}
+      custom={exitDirection}
+      variants={cardVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
       whileDrag={{ cursor: 'grabbing' }}
       className="absolute inset-0 rounded-3xl overflow-hidden shadow-2xl bg-slate-900 border border-slate-800/80 cursor-grab active:cursor-grabbing select-none swipe-card-container z-20 flex flex-col justify-end"
     >
